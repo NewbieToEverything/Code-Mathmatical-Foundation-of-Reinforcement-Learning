@@ -1,3 +1,5 @@
+All R scripts are stored in the code folder.
+
 Algorithms are in the "functions.R", including:
  - Chapter 2: solving state values from Bellman equation using closed-form solution and iterative solution, and calculating action values from state values;
  - Chapter 4: value iteration, policy iteration, and truncated policy iteration;
