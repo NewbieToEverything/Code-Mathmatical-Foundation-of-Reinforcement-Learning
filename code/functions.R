@@ -831,6 +831,6 @@ find_optimal_policy <- function(exp_r_sc_a,
     if (is.null(colnames(Q_est)))
       colnames(Q_est) <- paste("a", 1L:n_action, sep = "")
   }
-  counts
+  
   return(list(policy = pi_a_sc_est, state_value = sv_est, action_value = Q_est))
 }

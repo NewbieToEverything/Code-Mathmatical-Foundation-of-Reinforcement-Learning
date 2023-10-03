@@ -34,7 +34,6 @@ exp_r_sc_a <- exp_r_sc_a_grid(
   r_target = 0, 
   r_regular = -1
 )
-set.seed(123)
 
 results_sarsa <- find_optimal_policy(
   exp_r_sc_a = exp_r_sc_a, 
