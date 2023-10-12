@@ -1,6 +1,6 @@
 #' Generate \(P(s'|s,a)\) for grid-word example
 #'
-#' @param dim_grid numeric vector, with 1st element = number of rows, 2nd element = number of cols.
+#' @param dim_grid numeric vector, 1st element = number of rows, 2nd element = number of cols.
 #'
 #' @return a \(n_state \times n_state \times n_action) numeric array wherein the element is \(P(s'|s, a)\).
 P_sn_sc_a_grid <- function(dim_grid = NULL) {
@@ -43,12 +43,13 @@ P_sn_sc_a_grid <- function(dim_grid = NULL) {
 
 #' Generate \(\sum_r P(r|s,a)r\) for grid-word example
 #' 
-#' @param dim_grid `numeric vector`, with 1st element = number of rows, 2nd element = number of cols.
+#' @param dim_grid `numeric` vector, 1st element = number of rows, 2nd element = number of cols.
 #' @param id_forbidden the indices of all forbidden area, could be `NULL`, means no forbidden area. 
 #' @param id_target the index of target area, must be a length-1 vector.
 #' @param r_forbidden `integer`, the reward if enter hidden area.
 #' @param r_boundary `integer`, the reward if hit boundary.
 #' @param r_target `integer`, the reward if enter target area.
+#' @param r_regular `integer`, the reward if enter regular area.
 #' 
 #' @details
 #' The index of state starts from the top-left state and increment row-wise.
@@ -149,7 +150,7 @@ P_sn_sc <- function(pi_a_sc, P_sn_sc_a) {
 #' Simulate a single episode 
 #' 
 #' Simulate a single episode with given starting state-action pair. Dynamic 
-#'    dynamic models should be provided.
+#'    models must be provided.
 #'
 #' @param s_cur `integer`, current state.
 #' @param a_cur `integer`, current action.
@@ -158,7 +159,7 @@ P_sn_sc <- function(pi_a_sc, P_sn_sc_a) {
 #' @param pi_a_sc the policy, a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\pi(a|s)\).
 #' @param length_episode `integer` with default = `5L`, the length of each simulated episode.
 #'
-#' @return a list object, recording rewards as its first element, states as its second element, and actions as its third element
+#' @return a list object, recording rewards as its first element, states as its second element, and actions as its third element.
 simu_single_episode <- function(s_cur, 
                                 a_cur, 
                                 exp_r_sc_a, 
@@ -193,7 +194,7 @@ simu_single_episode <- function(s_cur,
 
 #' Action value
 #' 
-#' Calculate action value using either known state values or Monte Carlo method.
+#' Calculate action value using either known state values or Monte Carlo-based method.
 #'
 #' @param exp_r_sc_a a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\sum_r P(r|s,a)r\).
 #' @param P_sn_sc_a a \(n_state \times n_state \times n_action) `numeric array` wherein the element is \(P(s'|s, a)\).
@@ -236,7 +237,7 @@ action_value <- function(exp_r_sc_a,
   n_state <- nrow(exp_r_sc_a)
   n_action <- ncol(exp_r_sc_a)
   
-  # calculate action value immediately using known state value
+  # calculate action value immediately from known state value
   if (method == "fromSV") {
     if (is.null(sv)) stop("State value must be provided to calculate action value.")
     # to avoid loop when calculating action values, extend v so that it has 
@@ -295,7 +296,6 @@ action_value <- function(exp_r_sc_a,
       # s_cur <- 1L
       # a_cur <- 2L
     }
-    # print(s_cur)
   }
   
   if (startsWith(method, "MC")) {
@@ -318,12 +318,12 @@ action_value <- function(exp_r_sc_a,
         which(as_pairs[, 1L] == episode$states[x] & as_pairs[, 2L] == episode$actions[x])
       })
       for (ieps in length_episode:1L) {
-        # update the action value from backward
+        # update the action value backward
         s_cur <- episode$states[ieps]
         a_cur <- episode$actions[ieps]
         id_as_pair <- id_as_pairs[ieps]
-        G <- gamma * G + episode$rewards[ieps] # records return
-        is_included <- TRUE # every visit method
+        G <- gamma * G + episode$rewards[ieps]  # records return
+        is_included <- TRUE  # every visit method
         if (type_visit == 1L & ieps > 1L) {
           # first visit method
           if (!id_as_pair %in% id_as_pairs[1L:(ieps - 1L)]) {
