@@ -1,4 +1,4 @@
-# The illustrative examples in the chapter 7 of "Temperal difference learning".
+# The illustrative examples in the chapter 7 of "Temporal difference learning".
 # a1: upward
 # a2: rightward
 # a3: downward
@@ -45,3 +45,4 @@ results_sarsa <- find_optimal_policy(
   n_episode_max = 80000L
 )
 
+# Figure 7.2
