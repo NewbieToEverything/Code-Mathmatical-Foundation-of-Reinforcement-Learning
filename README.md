@@ -1,3 +1,5 @@
+This is the repository hosting the R scripts of the book "[Mathematical Foundations of Reinforcement Learning](https://github.com/MathFoundationRL/Book-Mathmatical-Foundation-of-Reinforcement-Learning)" written by Yujun at Jiangxi Normal University.
+
 All R scripts are stored in the code folder.
 
 Algorithms are in the "functions.R", including:
