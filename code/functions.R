@@ -381,6 +381,7 @@ action_value <- function(exp_r_sc_a,
   }
   
   if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
+    # browser()
     # Single experience in Sarsa, expected Sarsa, and Q learning contains only 1 step
     if (method != "SarsaN") length_episode <- 1L
     episode <- simu_single_episode(
@@ -391,11 +392,16 @@ action_value <- function(exp_r_sc_a,
       pi_a_sc, 
       length_episode = length_episode
     )
+    
+    # if (s_target %in% episode$states) {
+    #   
+    # }
+    
     id_sa_pair <- sapply(1L:length_episode, \(x){
       which(sa_pairs[, 1L] == episode$states[x] & 
               sa_pairs[, 2L] == episode$actions[x])
     })
-    counts[id_sa_pair] <- counts[id_sa_pair] + 1L
+    counts[id_sa_pair[1L]] <- counts[id_sa_pair[1L]] + 1L
     s_t <- episode$states[1L]
     a_t <- episode$actions[1L]
     r_t_plus_1 <- episode$rewards[1L]
@@ -418,6 +424,7 @@ action_value <- function(exp_r_sc_a,
     if (s_t_plus_1 == s_target) {
       # if target state reached, reset the starting state-action pair
       n_episode <- n_episode + 1L
+      print(n_episode)
       s_cur <- NULL
       a_cur <- NULL
     } else {
@@ -677,7 +684,7 @@ find_optimal_policy <- function(exp_r_sc_a,
   
   # iterative estimation
   for (iter in 1L:iter_max) {
-    print(iter)
+    # print(iter)
     # policy evaluation, calculate state value of updated policy using k-1 th 
     #   state values as previous state value vector.
     if (type_iter == 1L) {
@@ -703,6 +710,7 @@ find_optimal_policy <- function(exp_r_sc_a,
       )
     } else if (type_iter == 2L) {
       # policy iteration
+      # browser()
       results <- policy_evaluation(
         exp_r_sc_a = exp_r_sc_a, 
         P_sn_sc_a = P_sn_sc_a, 
@@ -760,29 +768,34 @@ find_optimal_policy <- function(exp_r_sc_a,
       a_cur <- results$a_cur
       n_episode <- results$n_episode
     }
-    
     # policy improvement/update
-    indices_q_max <- vector(mode = "integer", length = n_state)
-    for (is in 1L:n_state) {
+    id_state_Qupdated <- (1L:n_state)[rowSums(Q_est == Q_ini) != n_action]
+    
+    indices_q_max <- vector(mode = "integer", length = length(id_state_Qupdated))
+    for (i in seq_along(id_state_Qupdated)) {
+      is <- id_state_Qupdated[i]
       # to avoid updating pi for target area, because we always want agent to stay at target area
       if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q") & is == s_target) {
         next
       }
-      indices_q_max[is] <- which.max(rank(Q_est[is, ], ties.method = "random"))
+      indices_q_max[i] <- which.max(rank(Q_est[is, ], ties.method = "random"))
       if (is_on_policy) {
         # soft
-        pi_a_sc_est[is, indices_q_max[is]] <- 1L - epsilon * (n_action - 1L) / n_action
-        pi_a_sc_est[is, !(1L:n_action) %in% indices_q_max[is]] <- epsilon / n_action
-        indices_q_max[is] <- sample(n_action, 1L, prob = pi_a_sc_est[is, ])
+        pi_a_sc_est[is, indices_q_max[i]] <- 1L - epsilon * (n_action - 1L) / n_action
+        pi_a_sc_est[is, !(1L:n_action) %in% indices_q_max[i]] <- epsilon / n_action
+        indices_q_max[i] <- sample(n_action, 1L, prob = pi_a_sc_est[is, ])
       } else {
         # greedy
-        pi_a_sc_est[is, indices_q_max] <- 1L
-        pi_a_sc_est[is, !(1L:n_action) %in% indices_q_max[is]] <- 0L
+        pi_a_sc_est[is, indices_q_max[i]] <- 1L
+        pi_a_sc_est[is, !(1L:n_action) %in% indices_q_max[i]] <- 0L
       }
     }
     
     if (type_iter == 1L) {
-      sv_est <- sapply(1L:n_state, \(x) Q_est[x, indices_q_max[x]])
+      sv_est[id_state_Qupdated] <- sapply(
+        seq_along(id_state_Qupdated), 
+        \(x) Q_est[id_state_Qupdated[x], indices_q_max[x]]
+      )
     } else {
       sv_est <- results$state_value
     }
@@ -817,6 +830,8 @@ find_optimal_policy <- function(exp_r_sc_a,
       pi_a_sc_ini <- pi_a_sc_est
     }
   }
+  
+  print(c(sqrt(sum((Q_est - Q_ini) ^ 2L)), sqrt(sum((Q_est - Q_ini) ^ 2L))))
   
   # add names for pi and Q
   if (!is.null(pi_a_sc_est)) {
