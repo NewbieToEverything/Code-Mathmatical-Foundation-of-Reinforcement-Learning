@@ -99,7 +99,7 @@ results_epsilon_0.1 <- policy_evaluation(
   exp_r_sc_a = exp_r_sc_a, 
   P_sn_sc_a = P_sn_sc_a, 
   pi_a_sc = pi_a_sc, 
-  is_closedform_solution = T
+  is_closedform_solution = TRUE
 )
 cat("-------------Figure 5.5 b, ϵ = 0.1, policy evaluation -------------\n")
 print(
@@ -121,7 +121,7 @@ results_epsilon_0.2 <- policy_evaluation(
   exp_r_sc_a = exp_r_sc_a, 
   P_sn_sc_a = P_sn_sc_a, 
   pi_a_sc = pi_a_sc, 
-  is_closedform_solution = T
+  is_closedform_solution = TRUE
 )
 cat("-------------Figure 5.5 c, ϵ = 0.2, policy evaluation -------------\n")
 print(
@@ -143,7 +143,7 @@ results_epsilon_0.5 <- policy_evaluation(
   exp_r_sc_a = exp_r_sc_a, 
   P_sn_sc_a = P_sn_sc_a, 
   pi_a_sc = pi_a_sc, 
-  is_closedform_solution = T
+  is_closedform_solution = TRUE
 )
 cat("-------------Figure 5.5 d, ϵ = 0.5, policy evaluation -------------\n")
 print(
@@ -203,7 +203,7 @@ results_epsilon_0.1_closed <- policy_evaluation(
   exp_r_sc_a = exp_r_sc_a, 
   P_sn_sc_a = P_sn_sc_a, 
   pi_a_sc = results_epsilon_0.1$policy, 
-  is_closedform_solution = T
+  is_closedform_solution = TRUE
 )
 print(
   matrix(results_epsilon_0.1_closed$state_value, nrow = 5L, ncol = 5L, byrow = TRUE), 
@@ -259,7 +259,7 @@ results_epsilon_0.5_closed <- policy_evaluation(
   exp_r_sc_a = exp_r_sc_a, 
   P_sn_sc_a = P_sn_sc_a, 
   pi_a_sc = results_epsilon_0.5$policy,
-  is_closedform_solution = T
+  is_closedform_solution = TRUE
 )
 print(
   matrix(results_epsilon_0.5_closed$state_value, nrow = 5L, ncol = 5L, byrow = TRUE), 
