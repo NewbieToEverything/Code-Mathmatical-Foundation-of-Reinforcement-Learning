@@ -30,9 +30,9 @@ exp_r_sc_a <- exp_r_sc_a_grid(
   c(7L, 8L, 13L, 17L, 19L, 22L), 
   18L, 
   r_forbidden = -10L, 
-  r_boundary = -10,
-  r_target = 0, 
-  r_regular = -1
+  r_boundary = -10L,
+  r_target = 0L, 
+  r_regular = -1L
 )
 
 results_sarsa <- find_optimal_policy(
@@ -45,4 +45,38 @@ results_sarsa <- find_optimal_policy(
   n_episode_max = 80000L
 )
 
-# Figure 7.2
+results_sarsa_exp <- find_optimal_policy(
+  exp_r_sc_a = exp_r_sc_a, 
+  P_sn_sc_a = P_sn_sc_a, 
+  type_iter = 2L, 
+  method = "SarsaExp", 
+  iter_max = 100000L, 
+  s_target = 18L, 
+  n_episode_max = 80000L
+)
+
+results_sarsa_n <- find_optimal_policy(
+  exp_r_sc_a = exp_r_sc_a, 
+  P_sn_sc_a = P_sn_sc_a, 
+  type_iter = 2L, 
+  method = "SarsaN", 
+  iter_max = 100000L, 
+  s_target = 18L, 
+  length_episode = 30L,
+  n_episode_max = 80000L
+)
+
+results_Q <- find_optimal_policy(
+  exp_r_sc_a = exp_r_sc_a, 
+  P_sn_sc_a = P_sn_sc_a, 
+  type_iter = 2L, 
+  method = "Q", 
+  iter_max = 100000L, 
+  s_target = 18L, 
+  n_episode_max = 80000L
+)
+
+
+# Figure 7.2 --------------------------------------------------------------
+
+

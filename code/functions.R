@@ -43,13 +43,13 @@ P_sn_sc_a_grid <- function(dim_grid = NULL) {
 
 #' Generate \(\sum_r P(r|s,a)r\) for grid-word example
 #' 
-#' @param dim_grid `numeric` vector, 1st element = number of rows, 2nd element = number of cols.
-#' @param id_forbidden the indices of all forbidden area, could be `NULL`, means no forbidden area. 
-#' @param id_target the index of target area, must be a length-1 vector.
-#' @param r_forbidden `integer`, the reward if enter hidden area.
-#' @param r_boundary `integer`, the reward if hit boundary.
-#' @param r_target `integer`, the reward if enter target area.
-#' @param r_regular `integer`, the reward if enter regular area.
+#' @param dim_grid numeric vector, 1st element = number of rows, 2nd element = number of cols.
+#' @param id_forbidden integer vector, the indices of all forbidden area, could be `NULL`, means no forbidden area. 
+#' @param id_target the index of target area, must be a length-1 integer vector.
+#' @param r_forbidden integer scalar, the reward of entering hidden area.
+#' @param r_boundary integer scalar, the reward of hitting boundary.
+#' @param r_target integer scalar, the reward of entering target area.
+#' @param r_regular integer scalar, the reward of entering regular area.
 #' 
 #' @details
 #' The index of state starts from the top-left state and increment row-wise.
@@ -152,12 +152,12 @@ P_sn_sc <- function(pi_a_sc, P_sn_sc_a) {
 #' Simulate a single episode with given starting state-action pair. Dynamic 
 #'    models must be provided.
 #'
-#' @param s_cur `integer`, current state.
-#' @param a_cur `integer`, current action.
-#' @param exp_r_sc_a a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\sum_r P(r|s,a)r\).
-#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) `numeric array` wherein the element is \(P(s'|s, a)\).
-#' @param pi_a_sc the policy, a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\pi(a|s)\).
-#' @param length_episode `integer` with default = `5L`, the length of each simulated episode.
+#' @param s_cur integer scalar, current state.
+#' @param a_cur integer scalar, current action.
+#' @param exp_r_sc_a a \(n_state \times n_action\) numeric matrix wherein the element is \(\sum_r P(r|s,a)r\).
+#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) numeric array wherein the element is \(P(s'|s, a)\).
+#' @param pi_a_sc the policy, a \(n_state \times n_action\) numeric matrix wherein the element is \(\pi(a|s)\).
+#' @param length_episode integer scalar, with default = `5L`, the length of each simulated episode.
 #'
 #' @return a list object, recording rewards as its first element, states as its second element, and actions as its third element.
 simu_single_episode <- function(s_cur, 
@@ -196,32 +196,31 @@ simu_single_episode <- function(s_cur,
 #' 
 #' Calculate action value using either known state values or Monte Carlo-based method.
 #'
-#' @param exp_r_sc_a a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\sum_r P(r|s,a)r\).
-#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) `numeric array` wherein the element is \(P(s'|s, a)\).
-#' @param pi_a_sc the policy, a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\pi(a|s)\).
-#' @param gamma `[0,1]`, discount rate.
-#' @param sv `numeric vector`, the state value vectors. Unless Monte Carlo method is applied to calculate action value, user must provide state value.
-#' @param method a `character` string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "MCbasic" (monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
-#' @param length_episode `integer` with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair `integer` with default = `30L`, the number of simulated episode for each state-action pair.
-#' @param type_visit `integer` with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
-#' @param Q_ini `double vector`, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
-#' @param counts `integer vector`, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
-#' @param min_count `integer`, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
-#' @param method a `character` string specifying the alternative hypothesis, must be one of "Sarsa" (state-action-reward-state-action, default), "MCbasic" (monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
-#' @param alpha `double`, with default = `0.1`, learning rate. 
-#' @param s_cur `integer`, current state, must be provided if `method = "Sarsa"`.
-#' @param a_cur `integer`, current action, must be provided if `method = "Sarsa"`.
-#' @param s_target `integer`, target state, must be provided if `method = "Sarsa"`.
-#' @param n_episode `integer`, number of episodes to generate for Sarsa.
-#'
+#' @param exp_r_sc_a a \(n_state \times n_action\) numeric matrix wherein the element is \(\sum_r P(r|s,a)r\).
+#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) numeric array wherein the element is \(P(s'|s, a)\).
+#' @param pi_a_sc the policy, a \(n_state \times n_action\) numeric matrix wherein the element is \(\pi(a|s)\).
+#' @param gamma double scalar, discount rate \((0,1)\).
+#' @param sv numeric vector, the state value vectors. Unless Monte Carlo method is applied to calculate action value, user must provide state value.
+#' @param method a character string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "SarsaExp" (expected Sarsa), "SarsaN" (n-step Sarsa), "Q" (Q-learning), "MCbasic" (Monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
+#' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
+#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
+#' @param Q_ini double vector, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
+#' @param counts integer vector, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
+#' @param min_count integer scalar, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
+#' @param alpha double scalar, with default = `0.1`, learning rate. 
+#' @param s_cur integer scalar, current state, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param a_cur integer scalar, current action, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param s_target integer scalar, target state, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param n_episode integer scalar, number of episodes to generate,  must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' 
 #' @return the action value \(q_\pi(s,a)\).
 action_value <- function(exp_r_sc_a, 
                          P_sn_sc_a, 
                          pi_a_sc = NULL, 
                          gamma = 0.9, 
                          sv = NULL, 
-                         method = "MCes",
+                         method = "Sarsa",
                          length_episode = 5L, 
                          n_epi_each_as_pair = 30L, 
                          type_visit = 1L, 
@@ -253,7 +252,7 @@ action_value <- function(exp_r_sc_a,
   
   if (method != "fromSV") {
     if (is.null(Q_ini)) {
-      # initialize the action value vector if 1st iteration
+      # initialize the action value vector, if 1st iteration
       Q_ini <- matrix(0, nrow = n_state, ncol = n_action)
     }
     # Generate all state-action pairs
@@ -263,28 +262,15 @@ action_value <- function(exp_r_sc_a,
     ))
     n_as_pair <- nrow(as_pairs)
     if (method != "MCbasic") {
-      # initialize the counts vector if 1st iteration for Monte Carlo exploring
-      #   starts and Sarsa
+      # initialize the counts vector, if 1st iteration, for Monte Carlo exploring
+      #   starts, Sarsa, Expected Sarsa, n-step Sarsa, and Q learning 
       if (is.null(counts)) 
         counts <- vector(mode = "integer", length = n_as_pair)
     }
   }
   
-  # Set starting state-action pair for Monte Carlo exploring starts
-  if (method == "MCes") {
-    # increase the probability of under-sampled state-action pairs
-    if (any(counts < min_count)) {
-      id_as_pair <- sample((1L:n_as_pair)[counts < min_count], 1L)
-    } else {
-      id_as_pair <- sample(n_as_pair, 1L)
-    }
-    s_cur <- as_pairs[id_as_pair, 1L]
-    a_cur <- as_pairs[id_as_pair, 2L]
-  }
-  
-  # Set starting state-action pair for Sarsa
-  if (method == "Sarsa") {
-    if (is.null(s_cur)) {
+  # Set starting state-action pair for Sarsa, expected Sarsa, n-step Sarsa, Q learning, and Monte Carlo exploring starts 
+  if ((method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q") & is.null(s_cur) ) | method == "MCes") {
       # increase the probability of under-sampled state-action pairs
       if (any(counts < min_count)) {
         id_as_pair <- sample((1L:n_as_pair)[counts < min_count], 1L)
@@ -293,11 +279,11 @@ action_value <- function(exp_r_sc_a,
       }
       s_cur <- as_pairs[id_as_pair, 1L]
       a_cur <- as_pairs[id_as_pair, 2L]
-      # s_cur <- 1L
-      # a_cur <- 2L
-    }
+      s_cur <- 1L  # fix starting state-action pair
+      a_cur <- 2L
   }
   
+  # Calculate action value
   if (startsWith(method, "MC")) {
     if (method == "MCes") {
       # Monte Carlo exploring start
@@ -394,7 +380,9 @@ action_value <- function(exp_r_sc_a,
     Q_ini <- matrix(Q_ini, nrow = n_state, ncol = n_action)
   }
   
-  if (method == "Sarsa") {
+  if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
+    # Single experience in Sarsa, expected Sarsa, and Q learning contains only 1 step
+    if (method != "SarsaN") length_episode <- 1L
     episode <- simu_single_episode(
       s_cur, 
       a_cur, 
@@ -404,17 +392,29 @@ action_value <- function(exp_r_sc_a,
       length_episode = length_episode
     )
     id_as_pair <- sapply(1L:length_episode, \(x){
-      which(as_pairs[, 1L] == episode$states[x] & as_pairs[, 2L] == episode$actions[x])
+      which(as_pairs[, 1L] == episode$states[x] & 
+              as_pairs[, 2L] == episode$actions[x])
     })
     counts[id_as_pair] <- counts[id_as_pair] + 1L
     s_t <- episode$states[1L]
     a_t <- episode$actions[1L]
-    r_t_plus_1 <- episode$rewards
-    s_t_plus_1 <- episode$states[2L]
-    a_t_plus_1 <- episode$actions[2L]
+    r_t_plus_1 <- episode$rewards[1L]
+    s_t_plus_1 <- episode$states[length_episode + 1L]
+    a_t_plus_1 <- episode$actions[length_episode + 1L]
+    
+    if (method == "Sarsa") Q_t_plus_1 <- Q_ini[s_t_plus_1, a_t_plus_1]
+    if (method == "SarsaExp") 
+      Q_t_plus_1 <- sum(pi_a_sc[s_t_plus_1, ] * Q_ini[s_t_plus_1, ])
+    if (method == "SarsaN") {
+      gammas <- gamma ^ seq(0L, length_episode - 2L)
+      Q_t_plus_1 <- sum(gammas*episode$rewards[-1L] + 
+                          gamma^(length_episode - 1L) * Q_ini[s_t_plus_1, a_t_plus_1])
+    }
+    if (method == "Q") Q_t_plus_1 <- max(Q_ini[s_t_plus_1, ])
+    
     Q_ini[s_t, a_t] <- 
       Q_ini[s_t, a_t] - alpha * 
-      (Q_ini[s_t, a_t] - (r_t_plus_1 + gamma*Q_ini[s_t_plus_1, a_t_plus_1]))
+      (Q_ini[s_t, a_t] - (r_t_plus_1 + gamma*Q_t_plus_1))
     if (s_t_plus_1 == s_target) {
       # if target state reached, reset the starting state-action pair
       n_episode <- n_episode + 1L
@@ -440,28 +440,27 @@ action_value <- function(exp_r_sc_a,
 #' 
 #' Calculate state value and action value using either matrix solution (closed-form), or iterative solution.
 #'
-#' @param exp_r_sc_a a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\sum_r P(r|s,a)r\).
-#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) `numeric array` wherein the element is \(P(s'|s, a)\).
-#' @param pi_a_sc the policy, a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\pi(a|s)\).
-#' @param gamma `[0,1]`, discount rate, default = 0.9.
-#' @param sv_ini the initial state value vector \(v_o\).
-#' @param is_closedform_solution `logical` with default = `FALSE`, when `FALSE`, matrix solution is used to calculate \(v_\pi(s)\), otherwise the iterative solution is applied.
-#' @param stop_at_almost_equal `logical` with default = `FALSE`, if `TRUE`, the algorithm will stop if `all.equal(sv_est, sv_ini)`.
-#' @param stopping_crit `numeric` with default = 0.0001, the algorithm will stop if \(||v_{\pi_{k+1} - v_{\pi_{k}}|| < `stopping_crit`\).
-#' @param iter_max `integer` with default = `1000L`, the maximum number of iterations.
-#' @param method a `character` string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "MCbasic" (monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
-#' @param length_episode `integer` with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair `integer` with default = `30L`, the number of simulated episode for each state-action pair. 
-#' @param type_visit `integer` with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
-#' @param Q_ini `double vector`, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
-#' @param counts `integer vector`, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
-#' @param min_count `integer`, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
-#' @param method a `character` string specifying the alternative hypothesis, must be one of "Sarsa" (state-action-reward-state-action, default), "MCbasic" (monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
-#' @param alpha `double`, with default = `0.1`, learning rate. 
-#' @param s_cur `integer`, current state, must be provided if `method = "Sarsa"`.
-#' @param a_cur `integer`, current action, must be provided if `method = "Sarsa"`.
-#' @param s_target `integer`, target state, must be provided if `method = "Sarsa"`.
-#' @param n_episode `integer`, number of episodes to generate for Sarsa.
+#' @param exp_r_sc_a a \(n_state \times n_action\) numeric matrix wherein the element is \(\sum_r P(r|s,a)r\).
+#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) numeric array wherein the element is \(P(s'|s, a)\).
+#' @param pi_a_sc the policy, a \(n_state \times n_action\) numeric matrix wherein the element is \(\pi(a|s)\).
+#' @param gamma double scalar, discount rate \((0,1)\).
+#' @param sv_ini numeric vector, the initial state value vector \(v_o\).
+#' @param is_closedform_solution logical scalar, with default = `FALSE`, when `FALSE`, matrix solution is used to calculate \(v_\pi(s)\), otherwise the iterative solution is applied.
+#' @param stop_at_almost_equal logical scalar, with default = `FALSE`, if `TRUE`, the algorithm will stop if `all.equal(sv_est, sv_ini)`.
+#' @param stopping_crit double scalar, with default = `0.0001`, the algorithm will stop if \(||v_{\pi_{k+1} - v_{\pi_{k}}|| < `stopping_crit`\).
+#' @param iter_max integer scalar, with default = `1000L`, the maximum number of iterations.
+#' @param method a character string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "SarsaExp" (expected Sarsa), "SarsaN" (n-step Sarsa), "Q" (Q-learning), "MCbasic" (Monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
+#' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
+#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
+#' @param Q_ini double vector, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
+#' @param counts integer vector, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
+#' @param min_count integer scalar, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
+#' @param alpha double scalar, with default = `0.1`, learning rate. 
+#' @param s_cur integer scalar, current state, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param a_cur integer scalar, current action, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param s_target integer scalar, target state, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param n_episode integer scalar, number of episodes to generate,  must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
 #'
 #' @return the state value vector \(v_\pi(s)\) and the action value matrix \(q_{(s,a)}\).
 policy_evaluation <- function(exp_r_sc_a, 
@@ -473,7 +472,7 @@ policy_evaluation <- function(exp_r_sc_a,
                               stop_at_almost_equal = FALSE,
                               stopping_crit = 0.0001, 
                               iter_max = 1000L,
-                              method = "MCes", 
+                              method = "Sarsa", 
                               length_episode = 5L, 
                               n_epi_each_as_pair = 30L,
                               type_visit = 1L,  
@@ -543,15 +542,16 @@ policy_evaluation <- function(exp_r_sc_a,
       sv_est <- rowSums(pi_a_sc * Q_est)
       counts <- results$counts
       
-      if (method == "Sarsa") {
+      if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
         s_cur <- results$s_cur
         a_cur <- results$a_cur
         n_episode <- results$n_episode
       }
       
       # no need for iteration if estimating action value using Monte Carlo basic, 
-      #   Monte Carlo exploring starts, and Sarsa
+      #   Monte Carlo exploring starts, Sarsa, expected Sarsa, n-step Sarsa and Q learning
       if (method != "fromSV") break
+      
       # when to stop
       stop_cond_sv <- ifelse(
         stop_at_almost_equal, 
@@ -563,10 +563,6 @@ policy_evaluation <- function(exp_r_sc_a,
         isTRUE(all.equal(Q_est, Q_ini)), 
         sqrt(sum((Q_est - Q_ini) ^ 2L)) <= stopping_crit
       )
-      # to avoid under-sampling in Monte Carlo exploring starts
-      if (method == "MCes") {
-        stop_cond_Q <- any(counts < min_count)
-      }
       
       if (stop_cond_sv & stop_cond_Q) {
         # update action value use the latest state value
@@ -608,27 +604,27 @@ policy_evaluation <- function(exp_r_sc_a,
 #' 
 #' Find the optimal policy using either Value iteration, policy iteration, or truncated policy iteration.
 #'
-#' @param exp_r_sc_a exp_r_sc_a a \(n_state \times n_action\) `numeric matrix` wherein the element is \(\sum_r P(r|s,a)r\).
-#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) `numeric array` wherein the element is \(P(s'|s, a)\).
-#' @param pi_a_sc_ini the initial policy, a \(n_state \times n_action\) `numeric` matrix wherein the element is \(\pi(a|s)\).
-#' @param gamma `[0,1]`, discount rate.
-#' @param is_closedform_solution `logical` with default = `FALSE`, when `FALSE`, matrix solution is used to calculate \(v_\pi(s)\), otherwise the iterative solution is applied.
-#' @param stop_at_almost_equal `logical` with default = `FALSE`, if `TRUE`, the algorithm will stop if `all.equal(sv_est, sv_ini)`.
-#' @param stopping_crit `numeric` with default = 0.0001, the algorithm will stop if \(||v_{\pi_{k+1} - v_{\pi_{k}}|| < `stopping_crit`\).
-#' @param sv_ini `numeric vector`, the initial state value vector \(v_0\) or \(v_{\pi_0}\).
-#' @param type_iter `integer` with default = `2L`, `1L`= value iteration, `2L`= policy iteration, `3L`= truncated policy iteration.
-#' @param iter_max `integer` with default = `1000L`, the maximum number of iterations.
-#' @param iter_truncate `integer` with default = `500L`, the maximum number of \(j_truncate\).
-#' @param method a `character` string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "MCbasic" (monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
-#' @param is_on_policy `logical` with default = `TRUE`, whether to use on-policy (soft).
-#' @param epsilon `double` with default = `0.1`.
-#' @param length_episode integer with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair integer with default = `30L`, the number of simulated episode for each state-action pair. 
-#' @param type_visit `integer` with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
-#' @param min_count `integer`, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
-#' @param alpha `double`, with default = `0.1`, learning rate. 
-#' @param s_target `integer`, target state, must be provided if `method = "Sarsa"`.
-#' @param n_episode_max `integer`, the maximun number of episodes to generate for Sarsa.
+#' @param exp_r_sc_a a \(n_state \times n_action\) numeric matrix wherein the element is \(\sum_r P(r|s,a)r\).
+#' @param P_sn_sc_a a \(n_state \times n_state \times n_action) numeric array wherein the element is \(P(s'|s, a)\).
+#' @param pi_a_sc_ini the initial policy, a \(n_state \times n_action\) numeric matrix wherein the element is \(\pi(a|s)\).
+#' @param gamma double scalar, discount rate \((0,1)\).
+#' @param is_closedform_solution logical scalar with default = `FALSE`, when `FALSE`, matrix solution is used to calculate \(v_\pi(s)\), otherwise the iterative solution is applied.
+#' @param stop_at_almost_equal logical scalar with default = `FALSE`, if `TRUE`, the algorithm will stop if `all.equal(sv_est, sv_ini)`.
+#' @param stopping_crit numeric scalar with default = 0.0001, the algorithm will stop if \(||v_{\pi_{k+1} - v_{\pi_{k}}|| < `stopping_crit`\).
+#' @param sv_ini numeric vector, the initial state value vector \(v_0\) or \(v_{\pi_0}\).
+#' @param type_iter integer scalar with default = `2L`, `1L`= value iteration, `2L`= policy iteration, `3L`= truncated policy iteration.
+#' @param iter_max integer scalar with default = `1000L`, the maximum number of iterations.
+#' @param iter_truncate integer scalar with default = `500L`, the maximum number of \(j_truncate\).
+#' @param method a character string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "SarsaExp" (expected Sarsa), "SarsaN" (n-step Sarsa), "Q" (Q-learning), "MCbasic" (Monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
+#' @param is_on_policy logical scalar with default = `TRUE`, whether to use on-policy (soft).
+#' @param epsilon double scalar with default = `0.1`.
+#' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
+#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
+#' @param min_count integer scalar, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
+#' @param alpha double scalar, with default = `0.1`, learning rate. 
+#' @param s_target integer scalar, target state, must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
+#' @param n_episode integer scalar, number of episodes to generate,  must be provided if method = either "Sarsa", "SarsaExp", "SarsaN", or "Q".
 #'
 #' @return a list containing optimal policy and optimal state values.
 find_optimal_policy <- function(exp_r_sc_a, 
@@ -642,7 +638,7 @@ find_optimal_policy <- function(exp_r_sc_a,
                                 type_iter = 2L,
                                 iter_max = 1000L,
                                 iter_truncate = 10L,
-                                method = "MCes",
+                                method = "Sarsa",
                                 is_on_policy = TRUE,
                                 epsilon = 0.1,
                                 length_episode = 30L, 
@@ -667,12 +663,12 @@ find_optimal_policy <- function(exp_r_sc_a,
     single_action[5L] <- 1L
     pi_a_sc_ini <- single_action[rep(1L, n_state), ]
   }
-  if (method == "Sarsa") {
+  if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
     s_cur <- NULL
     a_cur <- NULL
-    n_episode <- 1L
-    length_episode <- 1L # correspond to a single experience under current policy
+    n_episode <- 1L  # initialize the cumulative number of episodes generated 
     pi_a_sc_ini[s_target, ] <- c(rep(0L, n_action - 1L), 1L)
+    # always stay in target area, if reached
   }
   pi_a_sc_est <- pi_a_sc_ini
   sv_est <- sv_ini <- matrix(0L, nrow = n_state, ncol = 1L)
@@ -681,6 +677,7 @@ find_optimal_policy <- function(exp_r_sc_a,
   
   # iterative estimation
   for (iter in 1L:iter_max) {
+    print(iter)
     # policy evaluation, calculate state value of updated policy using k-1 th 
     #   state values as previous state value vector.
     if (type_iter == 1L) {
@@ -758,7 +755,7 @@ find_optimal_policy <- function(exp_r_sc_a,
     Q_est <- results$action_value
     counts <- results$counts
     
-    if (method == "Sarsa") {
+    if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
       s_cur <- results$s_cur
       a_cur <- results$a_cur
       n_episode <- results$n_episode
@@ -767,7 +764,8 @@ find_optimal_policy <- function(exp_r_sc_a,
     # policy improvement/update
     indices_q_max <- vector(mode = "integer", length = n_state)
     for (is in 1L:n_state) {
-      if (method == "Sarsa" & is == s_target) {
+      # to avoid updating pi for target area, because we always want agent to stay at target area
+      if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q") & is == s_target) {
         next
       }
       indices_q_max[is] <- which.max(rank(Q_est[is, ], ties.method = "random"))
@@ -801,11 +799,13 @@ find_optimal_policy <- function(exp_r_sc_a,
       sqrt(sum((Q_est - Q_ini) ^ 2L)) <= stopping_crit
     )
     
-    if (method == "MCes" | method == "Sarsa") {
+    # to avoid under-sampling
+    if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q", "MCes")) {
       if (any(counts < min_count)) stop_cond_Q <- FALSE
     }
     
-    if (method == "Sarsa") {
+    # to cap the maximum number of episodes
+    if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
       if (n_episode > n_episode_max) break
     }
     
@@ -818,6 +818,7 @@ find_optimal_policy <- function(exp_r_sc_a,
     }
   }
   
+  # add names for pi and Q
   if (!is.null(pi_a_sc_est)) {
     if (is.null(row.names(pi_a_sc_est)))
       row.names(pi_a_sc_est) <- paste("s", 1L:n_state, sep = "")
