@@ -176,7 +176,9 @@ simu_single_episode <- function(s_cur,
     actions = vector(mode = "integer", length = length_episode + 1L),
     rewards = vector(mode = "double", length = length_episode)
   )
-  episode$states[1L] <- s_cur # s0
+  episode$states[1L] <- s_cur  # s0
+  
+  if (is.null(a_cur)) a_cur <- sample(n_action, 1L, prob = pi_a_sc[s_cur, ])
   episode$actions[1L] <- a_cur  # a0
 
   # steps in a single episode starting from s0
@@ -424,12 +426,12 @@ action_value <- function(exp_r_sc_a,
     if (s_t_plus_1 == s_target) {
       # if target state reached, reset the starting state-action pair
       n_episode <- n_episode + 1L
-      print(n_episode)
+      if (n_episode %% 2000L == 0) print(n_episode)
       s_cur <- NULL
-      a_cur <- NULL
+      # a_cur <- NULL
     } else {
       s_cur <- s_t_plus_1
-      a_cur <- a_t_plus_1
+      # a_cur <- a_t_plus_1
     }
   }
   
@@ -437,7 +439,7 @@ action_value <- function(exp_r_sc_a,
     action_value = Q_ini, 
     counts = counts, 
     s_cur = s_cur, 
-    a_cur = a_cur,
+    # a_cur = a_cur,
     n_episode = n_episode
   ))
 }
@@ -539,7 +541,7 @@ policy_evaluation <- function(exp_r_sc_a,
         min_count = min_count, 
         alpha = alpha, 
         s_cur = s_cur, 
-        a_cur = a_cur, 
+        # a_cur = a_cur, 
         s_target = s_target, 
         n_episode = n_episode
       )
@@ -551,7 +553,7 @@ policy_evaluation <- function(exp_r_sc_a,
       
       if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
         s_cur <- results$s_cur
-        a_cur <- results$a_cur
+        # a_cur <- results$a_cur
         n_episode <- results$n_episode
       }
       
@@ -601,7 +603,7 @@ policy_evaluation <- function(exp_r_sc_a,
     action_value = results$action_value, 
     counts = results$counts,
     s_cur = s_cur,
-    a_cur = a_cur,
+    # a_cur = a_cur,
     n_episode = n_episode
   ))
 }
@@ -672,7 +674,7 @@ find_optimal_policy <- function(exp_r_sc_a,
   }
   if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
     s_cur <- NULL
-    a_cur <- NULL
+    # a_cur <- NULL
     n_episode <- 1L  # initialize the cumulative number of episodes generated 
     pi_a_sc_ini[s_target, ] <- c(rep(0L, n_action - 1L), 1L)
     # always stay in target area, if reached
@@ -704,7 +706,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         min_count = min_count, 
         alpha = alpha, 
         s_cur = s_cur, 
-        a_cur = a_cur, 
+        # a_cur = a_cur, 
         s_target = s_target, 
         n_episode = n_episode
       )
@@ -730,7 +732,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         min_count = min_count, 
         alpha = alpha, 
         s_cur = s_cur, 
-        a_cur = a_cur, 
+        # a_cur = a_cur, 
         s_target = s_target, 
         n_episode = n_episode
       )
@@ -755,7 +757,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         min_count = min_count,
         alpha = alpha, 
         s_cur = s_cur, 
-        a_cur = a_cur, 
+        # a_cur = a_cur, 
         s_target = s_target, 
         n_episode = n_episode
       )
@@ -765,7 +767,7 @@ find_optimal_policy <- function(exp_r_sc_a,
     
     if (method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q")) {
       s_cur <- results$s_cur
-      a_cur <- results$a_cur
+      # a_cur <- results$a_cur
       n_episode <- results$n_episode
     }
     # policy improvement/update
