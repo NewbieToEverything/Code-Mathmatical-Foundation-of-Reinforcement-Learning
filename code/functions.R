@@ -203,7 +203,7 @@ simu_single_episode <- function(s_cur,
 #' @param sv numeric vector, the state value vectors. Unless Monte Carlo method is applied to calculate action value, user must provide state value.
 #' @param method a character string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "SarsaExp" (expected Sarsa), "SarsaN" (n-step Sarsa), "Q" (Q-learning), "MCbasic" (Monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
 #' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param n_epi_each_sa_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
 #' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
 #' @param Q_ini double vector, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
 #' @param counts integer vector, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
@@ -222,7 +222,7 @@ action_value <- function(exp_r_sc_a,
                          sv = NULL, 
                          method = "Sarsa",
                          length_episode = 5L, 
-                         n_epi_each_as_pair = 30L, 
+                         n_epi_each_sa_pair = 30L, 
                          type_visit = 1L, 
                          Q_ini = NULL, 
                          counts = NULL,
@@ -256,16 +256,16 @@ action_value <- function(exp_r_sc_a,
       Q_ini <- matrix(0, nrow = n_state, ncol = n_action)
     }
     # Generate all state-action pairs
-    as_pairs <- as.matrix(expand.grid(
+    sa_pairs <- as.matrix(expand.grid(
       state = 1L:n_state, 
       action = 1L:n_action
     ))
-    n_as_pair <- nrow(as_pairs)
+    n_sa_pair <- nrow(sa_pairs)
     if (method != "MCbasic") {
       # initialize the counts vector, if 1st iteration, for Monte Carlo exploring
       #   starts, Sarsa, Expected Sarsa, n-step Sarsa, and Q learning 
       if (is.null(counts)) 
-        counts <- vector(mode = "integer", length = n_as_pair)
+        counts <- vector(mode = "integer", length = n_sa_pair)
     }
   }
   
@@ -273,12 +273,12 @@ action_value <- function(exp_r_sc_a,
   if ((method %in% c("Sarsa", "SarsaExp", "SarsaN", "Q") & is.null(s_cur) ) | method == "MCes") {
       # increase the probability of under-sampled state-action pairs
       if (any(counts < min_count)) {
-        id_as_pair <- sample((1L:n_as_pair)[counts < min_count], 1L)
+        id_sa_pair <- sample((1L:n_sa_pair)[counts < min_count], 1L)
       } else {
-        id_as_pair <- sample(n_as_pair, 1L)
+        id_sa_pair <- sample(n_sa_pair, 1L)
       }
-      s_cur <- as_pairs[id_as_pair, 1L]
-      a_cur <- as_pairs[id_as_pair, 2L]
+      s_cur <- sa_pairs[id_sa_pair, 1L]
+      a_cur <- sa_pairs[id_sa_pair, 2L]
       s_cur <- 1L  # fix starting state-action pair
       a_cur <- 2L
   }
@@ -300,32 +300,32 @@ action_value <- function(exp_r_sc_a,
       
       # update the action value based on simulated single episode
       G <- 0
-      id_as_pairs <- sapply(1L:length_episode, \(x){
-        which(as_pairs[, 1L] == episode$states[x] & as_pairs[, 2L] == episode$actions[x])
+      id_sa_pairs <- sapply(1L:length_episode, \(x){
+        which(sa_pairs[, 1L] == episode$states[x] & sa_pairs[, 2L] == episode$actions[x])
       })
       for (ieps in length_episode:1L) {
         # update the action value backward
         s_cur <- episode$states[ieps]
         a_cur <- episode$actions[ieps]
-        id_as_pair <- id_as_pairs[ieps]
+        id_sa_pair <- id_sa_pairs[ieps]
         G <- gamma * G + episode$rewards[ieps]  # records return
         is_included <- TRUE  # every visit method
         if (type_visit == 1L & ieps > 1L) {
           # first visit method
-          if (!id_as_pair %in% id_as_pairs[1L:(ieps - 1L)]) {
+          if (!id_sa_pair %in% id_sa_pairs[1L:(ieps - 1L)]) {
             is_included <- TRUE
           } else {
             is_included <- FALSE
           }
         }
         if (is_included) {
-          counts[id_as_pair] <- counts[id_as_pair] + 1L
-          if (counts[id_as_pair] == 1L) {
-            Q_ini[id_as_pair] <- G
+          counts[id_sa_pair] <- counts[id_sa_pair] + 1L
+          if (counts[id_sa_pair] == 1L) {
+            Q_ini[id_sa_pair] <- G
           } else {
             # incremental implementation, see more details in section 2.4 (Sutton et.al., 2018)
-            Q_ini[id_as_pair] <- 
-              Q_ini[id_as_pair] + 1L * (G - Q_ini[id_as_pair]) / counts[id_as_pair]
+            Q_ini[id_sa_pair] <- 
+              Q_ini[id_sa_pair] + 1L * (G - Q_ini[id_sa_pair]) / counts[id_sa_pair]
           }
         }
       }
@@ -333,9 +333,9 @@ action_value <- function(exp_r_sc_a,
     
     # Monte Carlo basic
     if (method == "MCbasic") {
-      n_episode <- n_as_pair * n_epi_each_as_pair
-      as_pairs_rep <- as_pairs[rep(1L:n_as_pair, each = n_epi_each_as_pair), ]
-      row.names(as_pairs_rep) <- NULL
+      n_episode <- n_sa_pair * n_epi_each_sa_pair
+      sa_pairs_rep <- sa_pairs[rep(1L:n_sa_pair, each = n_epi_each_sa_pair), ]
+      row.names(sa_pairs_rep) <- NULL
       episodes_rewards <- matrix(
         0, nrow = n_episode, ncol = length_episode
       )
@@ -355,8 +355,8 @@ action_value <- function(exp_r_sc_a,
       # simulate episodes for all action-state pairs with given number of episode length
       for (ie in 1L:n_episode) {
         tmp <- simu_single_episode(
-          as_pairs_rep[ie, 1L], 
-          as_pairs_rep[ie, 2L], 
+          sa_pairs_rep[ie, 1L], 
+          sa_pairs_rep[ie, 2L], 
           exp_r_sc_a, 
           P_sn_sc_a, 
           pi_a_sc, 
@@ -370,10 +370,10 @@ action_value <- function(exp_r_sc_a,
       Q_ini <- vector(mode = "double", length = n_state * n_action)
       
       for (iq in 1L:length(Q_ini)) {
-        is <- as_pairs[iq, 1L]
-        ia <- as_pairs[iq, 2L]
+        is <- sa_pairs[iq, 1L]
+        ia <- sa_pairs[iq, 2L]
         Q_ini[iq] <- mean(
-          episodes_rewards[as_pairs_rep[, 1L] == is & as_pairs_rep[, 2L] == ia]
+          episodes_rewards[sa_pairs_rep[, 1L] == is & sa_pairs_rep[, 2L] == ia]
         )
       }
     }
@@ -391,11 +391,11 @@ action_value <- function(exp_r_sc_a,
       pi_a_sc, 
       length_episode = length_episode
     )
-    id_as_pair <- sapply(1L:length_episode, \(x){
-      which(as_pairs[, 1L] == episode$states[x] & 
-              as_pairs[, 2L] == episode$actions[x])
+    id_sa_pair <- sapply(1L:length_episode, \(x){
+      which(sa_pairs[, 1L] == episode$states[x] & 
+              sa_pairs[, 2L] == episode$actions[x])
     })
-    counts[id_as_pair] <- counts[id_as_pair] + 1L
+    counts[id_sa_pair] <- counts[id_sa_pair] + 1L
     s_t <- episode$states[1L]
     a_t <- episode$actions[1L]
     r_t_plus_1 <- episode$rewards[1L]
@@ -451,7 +451,7 @@ action_value <- function(exp_r_sc_a,
 #' @param iter_max integer scalar, with default = `1000L`, the maximum number of iterations.
 #' @param method a character string specifying the method used to estimate action values, must be one of "Sarsa" (state-action-reward-state-action, default), "SarsaExp" (expected Sarsa), "SarsaN" (n-step Sarsa), "Q" (Q-learning), "MCbasic" (Monte Carlo basic), "MCes" (Monte Carlo exploring start), "fromSV" (calculate using known state values).
 #' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param n_epi_each_sa_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
 #' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
 #' @param Q_ini double vector, the initial action value, has to be provided when `is_exploring_starts = TRUE`. 
 #' @param counts integer vector, records the number of returns used in incremental implementation to estimate action value of each state-action pair. 
@@ -474,7 +474,7 @@ policy_evaluation <- function(exp_r_sc_a,
                               iter_max = 1000L,
                               method = "Sarsa", 
                               length_episode = 5L, 
-                              n_epi_each_as_pair = 30L,
+                              n_epi_each_sa_pair = 30L,
                               type_visit = 1L,  
                               Q_ini = NULL, 
                               counts = NULL, 
@@ -525,7 +525,7 @@ policy_evaluation <- function(exp_r_sc_a,
         sv = sv_ini, 
         method = method,
         length_episode = length_episode, 
-        n_epi_each_as_pair = n_epi_each_as_pair,
+        n_epi_each_sa_pair = n_epi_each_sa_pair,
         type_visit = type_visit,
         Q_ini = Q_ini,
         counts = counts,
@@ -574,7 +574,7 @@ policy_evaluation <- function(exp_r_sc_a,
           sv = sv_ini, 
           method = method,
           length_episode = length_episode, 
-          n_epi_each_as_pair = n_epi_each_as_pair,
+          n_epi_each_sa_pair = n_epi_each_sa_pair,
           type_visit = type_visit,
           Q_ini = Q_ini,
           counts = counts,
@@ -619,7 +619,7 @@ policy_evaluation <- function(exp_r_sc_a,
 #' @param is_on_policy logical scalar with default = `TRUE`, whether to use on-policy (soft).
 #' @param epsilon double scalar with default = `0.1`.
 #' @param length_episode integer scalar with default = `5L`, the length of each simulated episode.
-#' @param n_epi_each_as_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
+#' @param n_epi_each_sa_pair integer scalar with default = `30L`, the number of simulated episode for each state-action pair.
 #' @param type_visit integer scalar with default = `1L`, corresponding to the first-visit method, `2L` = every visit method. 
 #' @param min_count integer scalar, with default = `80L`, the minimum number of counts, to avoid insufficient sampling of state-action pairs in Monte Carlo ES and resultant premature stop of policy iteration. 
 #' @param alpha double scalar, with default = `0.1`, learning rate. 
@@ -642,7 +642,7 @@ find_optimal_policy <- function(exp_r_sc_a,
                                 is_on_policy = TRUE,
                                 epsilon = 0.1,
                                 length_episode = 30L, 
-                                n_epi_each_as_pair = 30L, 
+                                n_epi_each_sa_pair = 30L, 
                                 type_visit = 1L,
                                 min_count = 100L,
                                 alpha = 0.1,
@@ -690,7 +690,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         sv = sv_est,
         method = method,
         length_episode = length_episode, 
-        n_epi_each_as_pair = n_epi_each_as_pair, 
+        n_epi_each_sa_pair = n_epi_each_sa_pair, 
         type_visit =  type_visit, 
         Q_ini = Q_ini, 
         counts = counts, 
@@ -715,7 +715,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         iter_max = iter_max,
         method = method, 
         length_episode = length_episode, 
-        n_epi_each_as_pair = n_epi_each_as_pair,
+        n_epi_each_sa_pair = n_epi_each_sa_pair,
         type_visit = type_visit,
         Q_ini = Q_ini,
         counts = counts,
@@ -740,7 +740,7 @@ find_optimal_policy <- function(exp_r_sc_a,
         iter_max = iter_truncate,
         method = method, 
         length_episode = length_episode, 
-        n_epi_each_as_pair = n_epi_each_as_pair,
+        n_epi_each_sa_pair = n_epi_each_sa_pair,
         type_visit = type_visit,
         Q_ini = Q_ini,
         counts = counts,
